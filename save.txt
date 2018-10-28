@@ -1,0 +1,75 @@
+$id = $_SESSION['u_id'];
+$status = 0;
+
+if (isset($_POST['submit'])) {
+ $file = $_FILES['file'];
+
+ $fileName = $_FILES['file']['name'];
+ $fileTmpName = $_FILES['file']['tmp_name'];
+ $fileSize = $_FILES['file']['size'];
+ $fileError = $_FILES['file']['error'];
+ $fileType = $_FILES['file']['type'];
+
+ $fileExt = explode('.', $fileName);
+ $fileActualExt = strtolower(end($fileExt));
+
+ $allowed = array('jpg', 'jpeg', 'png', 'pdf');
+
+ if (in_array($fileActualExt, $allowed)) {
+  if ($fileError === 0) {
+           if ($fileSize < 1000000) {
+              $fileNameNew = "profile".$id.".".$fileActualExt;
+              $fileDestination = 'uploads/'.$fileNameNew;
+              move_uploaded_file($fileTmpName, $fileDestination);
+              $sql = "UPDATE profileimg SET status = ? WHERE userid = ?;";
+
+              $stmt = mysqli_stmt_init($conn);
+              if (!mysqli_prepare($stmt, $sql)) {
+                echo 'SQL error';
+              } else {
+               mysqli_stmt_bind_param($stmt, "ii", $status, $id);
+               mysqli_stmt_execute($stmt);
+              }
+              header("Location: ../index.php?uploadsuccess");
+           } else {
+               echo "Your file is too big!";
+           }
+  } else {
+   echo "There was an error uploading your file!";
+  }
+ } else {
+  echo "You cannot upload files of this type!";
+ }
+}
+
+if(isset($_FILES['file']['name'] )){
+	$name = $_FILES['file']['name']; //the file's original name on the client's machine will be stored in this variable
+	$extension = strtolower(substr($name,strpos($name,'.')+1));		//substr(text, position to start) strpos will start one position after the dot
+	$size = $_FILES['file']['size']; //this will store the file size in the associative array
+	$max_size = 100000;
+	$type = $_FILES['file']['type']; //this will store the type of the file
+	$tmp_name = $_FILES['file']['tmp_name']; //the temporary name of the file in which the uploaded file is stored in the server will be stored in the variable
+	if (isset($name)){
+		if(!empty($name)){
+			if(($extension == 'jpg' || $extension == 'jpeg') && ($type == 'image/jpeg' || $type == 'image/jpg') && $size <= $max_size){
+			
+			$location = 'uploads/';
+			
+				if(move_uploaded_file($tmp_name, $location.$name)){ //move_uploaded_file(temporary name, location.filename)
+				echo "Successful";		
+				}
+				else{
+					echo 'There was an error';
+				}
+			}
+			else{
+				echo 'File must be jpg/jpeg and must be 2MB or less';
+			}
+		}
+		
+		else{
+			echo "Please select file";
+		}
+	}
+
+}
